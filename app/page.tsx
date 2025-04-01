@@ -1,14 +1,18 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-
 import { cookies } from "next/headers";
-import { AuthButton } from "./auth-button";
+import AuthButtonServer from "./auth-button-server";
+
 export default async function Home() {
-  const supabase = createServerComponentClient({ cookies });
-  const { data: tweet } = await supabase.from("tweets").select();
+  const supabase = createServerComponentClient({
+    cookies,
+  });
+
+  const { data } = await supabase.from("tweets").select();
+
   return (
     <>
-      <AuthButton />
-      <pre>{JSON.stringify(tweet, null, 2)}</pre>
+      <AuthButtonServer />
+      <pre>{JSON.stringify(data, null, 2)}</pre>
     </>
   );
 }
