@@ -2,11 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { redirect } from "next/navigation";
+
+import { useRouter } from "next/navigation";
 
 export async function AuthButton() {
   const supabase = createClientComponentClient();
-
+  const router = useRouter();
   const handleSignIn = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "github",
@@ -15,6 +16,7 @@ export async function AuthButton() {
   };
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    router.refresh();
   };
   return (
     <>
