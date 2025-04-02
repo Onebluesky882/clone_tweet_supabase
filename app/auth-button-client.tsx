@@ -1,63 +1,49 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
   createClientComponentClient,
   Session,
 } from "@supabase/auth-helpers-nextjs";
-
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export function AuthButtonClient({ session }: { session: Session | null }) {
-  const supabase = createClientComponentClient<Database>();
+const AuthButtonClient = ({ session }: { session: Session | null }) => {
+  const supabase = createClientComponentClient();
+  const [userSession, setUserSession] = useState(session);
   const router = useRouter();
-  const [currentSession, setCurrentSession] = useState(session);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
-        setCurrentSession(newSession);
-        router.refresh(); // Refresh page to get updated session
+        setUserSession(newSession);
+        router.refresh();
       }
     );
-
-    return () => authListener.subscription.unsubscribe();
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [supabase, router]);
 
-  const handleSignIn = async () => {
-    const { error, data } = await supabase.auth.signInWithOAuth({
+  const handleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: "http://localhost:3000/auth/callback" },
     });
-
     if (error) {
-      console.error("Login error:", error);
-    } else {
-      window.location.href = data.url;
+      console.log("something wrong at handleLogin");
     }
   };
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-
+  const handleLogOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.log("something wrong at handleLogout");
+    }
     router.refresh();
   };
-
-  return currentSession ? (
-    <Button
-      onClick={() => {
-        handleSignOut();
-      }}
-    >
-      Logout
-    </Button>
+  return userSession ? (
+    <button onClick={handleLogOut}>Logout</button>
   ) : (
-    <Button
-      onClick={() => {
-        handleSignIn();
-      }}
-    >
-      Login
-    </Button>
+    <button onClick={handleLogin}>Login</button>
   );
-}
+};
+export default AuthButtonClient;
