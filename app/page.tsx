@@ -4,7 +4,7 @@ import AuthButtonServer from "./auth-button-server";
 import { redirect } from "next/navigation";
 
 export default async function Home() {
-  const supabase = createServerComponentClient({
+  const supabase = createServerComponentClient<Database>({
     cookies,
   });
 
@@ -16,12 +16,12 @@ export default async function Home() {
     redirect("/login");
   }
 
-  const { data } = await supabase.from("tweets").select();
+  const { data: tweets } = await supabase.from("tweets").select();
 
   return (
     <>
       <AuthButtonServer />
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      <pre>{JSON.stringify(tweets, null, 2)}</pre>
     </>
   );
 }

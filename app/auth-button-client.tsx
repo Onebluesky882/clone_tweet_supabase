@@ -10,7 +10,7 @@ import { redirect, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function AuthButtonClient({ session }: { session: Session | null }) {
-  const supabase = createClientComponentClient();
+  const supabase = createClientComponentClient<Database>();
   const router = useRouter();
   const [currentSession, setCurrentSession] = useState(session);
 
