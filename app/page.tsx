@@ -1,23 +1,30 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import {
+  createServerComponentClient,
+  Session,
+} from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+import AuthButtonClient from "./auth-button-client";
 import { redirect } from "next/navigation";
-import AuthButtonServer from "./auth-button-server";
 
 export default async function Home() {
   const supabase = createServerComponentClient({ cookies });
-
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  console.log("session : ", session);
+
   if (!session) {
     redirect("/login");
   }
-  const { data: tweets } = await supabase.from("tweets").select();
+  const { data: tweets, error } = await supabase.from("tweets").select();
+  if (error) {
+    console.error("Error fetching tweets:", error);
+    return <div>Error fetching data</div>;
+  }
   return (
-    <>
-      <AuthButtonServer />
+    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <h1>hello</h1>
+      <AuthButtonClient />
       <pre>{JSON.stringify(tweets, null, 3)}</pre>
-    </>
+    </div>
   );
 }
