@@ -1,7 +1,4 @@
-import {
-  createServerComponentClient,
-  Session,
-} from "@supabase/auth-helpers-nextjs";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import AuthButtonServer from "./auth-button-server";
@@ -15,7 +12,9 @@ export default async function Home() {
   if (!session) {
     redirect("/login");
   }
-  const { data: tweets } = await supabase.from("tweets").select();
+  const { data: tweets } = await supabase
+    .from("tweets")
+    .select("*, profiles(*)");
 
   return (
     <div className="flex justify-center">
