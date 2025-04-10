@@ -1,9 +1,11 @@
 "use client";
+import { LikeWithAuthor } from "@/app/types/type";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { IoMdHeart, IoIosHeartEmpty } from "react-icons/io";
-const Likes = ({ tweets }: any) => {
+
+const Likes = ({ tweet }: { tweet: LikeWithAuthor }) => {
   /* 
     input
         - user on session click like icon each tweet content  
@@ -14,55 +16,65 @@ const Likes = ({ tweets }: any) => {
         - delete .match user_id  row condition find tweet_id === 
 
     output
-        show count rows 
+        - show count rows 
     
     */
   const [like, setLike] = useState(false);
+  const [disable, setDisable] = useState(false);
   const router = useRouter();
-  const handleSubmitAdd = async () => {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
-    if (user) {
-      const { data } = await supabase
-        .from("likes")
-        .insert({ tweet_id: tweets.id, user_id: user.id })
-        .single();
-      console.log("add success", data);
-      router.refresh();
+  const handleSubmit = async () => {
+    if (!tweet.user_has_liked_tweet) {
+      setDisable(true);
+      setTimeout(() => {
+        setDisable(false);
+      }, 500);
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data } = await supabase
+          .from("likes")
+          .insert({ tweet_id: tweet.id, user_id: user.id })
+          .single();
+
+        router.refresh();
+        setLike((prev) => !prev);
+      }
+    } else {
+      setDisable(true);
+      setTimeout(() => {
+        setDisable(false);
+      }, 500);
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        await supabase
+          .from("likes")
+          .delete()
+          .match({ tweet_id: tweet.id, user_id: user.id })
+          .single();
+
+        router.refresh();
+        setLike((prev) => !prev);
+      }
     }
-
-    setLike((prev) => !prev);
-  };
-
-  const handleSubmitRemove = async () => {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      const { data } = await supabase
-        .from("likes")
-        .delete()
-        .match({ tweet_id: tweets.id, user_id: user.id })
-        .single();
-
-      console.log("delete success", data);
-      router.refresh();
-    }
-
-    setLike((prev) => !prev);
-    router.refresh();
   };
   return (
     <div>
-      {like ? (
-        <IoIosHeartEmpty onClick={handleSubmitAdd} />
+      {!tweet.user_has_liked_tweet ? (
+        <button onClick={handleSubmit} disabled={disable}>
+          <IoIosHeartEmpty />
+        </button>
       ) : (
-        <IoMdHeart onClick={handleSubmitRemove} />
+        <button onClick={handleSubmit} disabled={disable}>
+          <IoMdHeart />
+        </button>
       )}
     </div>
   );
