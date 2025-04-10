@@ -1,5 +1,5 @@
 export type LikeWithAuthor = Tweet & {
   author: Profiles;
-  liked: number;
+  likes: number;
   user_has_liked_tweet: boolean;
 };

@@ -13,7 +13,7 @@ const Post = () => {
     } = await supabase.auth.getUser();
     if (user) {
       await supabase.from("tweets").insert({ title: post, user_id: user.id });
-      router.refresh();
+      //   router.refresh();
     }
   };
 

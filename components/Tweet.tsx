@@ -1,22 +1,56 @@
 "use client";
 
-import { LikeWithAuthor } from "@/types/type";
+import { LikeWithAuthor as TweetWithAuthor } from "@/types/type";
 import Likes from "./Likes";
+import { useEffect, useOptimistic } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
 
-const Tweet = ({ tweet }: { tweet: LikeWithAuthor }) => {
+const Tweets = ({ tweets }: { tweets: TweetWithAuthor[] }) => {
+  const router = useRouter();
+  const supabase = createClient();
+  const [optimisticTweets, addOptimisticTweet] = useOptimistic<
+    TweetWithAuthor[],
+    TweetWithAuthor
+  >(tweets, (currentOptimisticTweets, newTweet) => {
+    const newOptimisticTweets = [...currentOptimisticTweets];
+    const index = newOptimisticTweets.findIndex(
+      (tweet) => tweet.id === newTweet.id
+    );
+
+    newOptimisticTweets[index] = newTweet;
+    return newOptimisticTweets;
+  });
+
+  useEffect(() => {
+    console.log("Initializing Supabase Realtime subscription");
+    const channel = supabase
+      .channel("realtime tweets")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tweets" },
+        (_payload) => {
+          router.refresh();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
-    <div className="flex  flex-col">
-      <p>{tweet.author.name}</p>
-      <p>{tweet.title}</p>
-
-      <div className="flex align-top outline-1">
-        {tweet.liked}
-        <div className="flex align-top outline-1">
-          {" "}
-          <Likes tweet={tweet} />
+    <div>
+      {optimisticTweets.map((tweet) => (
+        <div key={tweet.id}>
+          <p>{tweet.author.name}</p>
+          <p>{tweet.title}</p>
+          <p>{tweet.likes}</p>
+          <Likes tweet={tweet} addOptimisticTweet={addOptimisticTweet} />
         </div>
-      </div>
+      ))}
     </div>
   );
 };
-export default Tweet;
+export default Tweets;

@@ -1,7 +1,7 @@
 import Likes from "@/components/Likes";
 import Logout from "@/components/Logout";
 import Post from "@/components/Post";
-import Tweet from "@/components/Tweet";
+import Tweets from "@/components/Tweet";
 import { createServer } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -29,19 +29,15 @@ export default async function Home() {
       user_has_liked_tweet: !!tweet.likes.find(
         (like) => like.user_id === visitor?.id
       ),
-      liked: tweet.likes.length,
+      likes: tweet.likes.length,
     })) ?? [];
   return (
     <div>
       <h1>homepage</h1>
       <Logout />
       <Post />
-      <div>
-        {tweets?.map((tweet) => (
-          <Tweet tweet={tweet} key={tweet.id} />
-        ))}
-      </div>
-      <pre>{JSON.stringify(tweets, null, 3)}</pre>
+      <Tweets tweets={tweets} />
+      <div></div>
     </div>
   );
 }

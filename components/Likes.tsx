@@ -1,11 +1,22 @@
 "use client";
-import { LikeWithAuthor } from "@/types/type";
+import {
+  LikeWithAuthor,
+  LikeWithAuthor as TweetWithAuthor,
+} from "@/types/type";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { IoMdHeart, IoIosHeartEmpty } from "react-icons/io";
 
-const Likes = ({ tweet }: { tweet: LikeWithAuthor }) => {
+const Likes = ({
+  tweet,
+  addOptimisticTweet,
+}: {
+  tweet: LikeWithAuthor;
+  addOptimisticTweet: (newTweet: TweetWithAuthor) => void;
+}) => {
+  const [isPending, startTransition] = useTransition();
+
   /* 
     input
         - user on session click like icon each tweet content  
@@ -24,11 +35,36 @@ const Likes = ({ tweet }: { tweet: LikeWithAuthor }) => {
   const router = useRouter();
 
   const handleSubmit = async () => {
-    if (!tweet.user_has_liked_tweet) {
-      setDisable(true);
-      setTimeout(() => {
-        setDisable(false);
-      }, 500);
+    if (tweet.user_has_liked_tweet) {
+      startTransition(() => {
+        addOptimisticTweet({
+          ...tweet,
+          likes: tweet.likes - 1,
+          user_has_liked_tweet: !tweet.user_has_liked_tweet,
+        });
+      });
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        await supabase
+          .from("likes")
+          .delete()
+          .match({ tweet_id: tweet.id, user_id: user.id });
+
+        router.refresh();
+        setLike((prev) => !prev);
+      }
+    } else {
+      startTransition(() => {
+        addOptimisticTweet({
+          ...tweet,
+          likes: tweet.likes + 1,
+          user_has_liked_tweet: !tweet.user_has_liked_tweet,
+        });
+      });
       const supabase = createClient();
       const {
         data: { user },
@@ -43,38 +79,15 @@ const Likes = ({ tweet }: { tweet: LikeWithAuthor }) => {
         router.refresh();
         setLike((prev) => !prev);
       }
-    } else {
-      setDisable(true);
-      setTimeout(() => {
-        setDisable(false);
-      }, 500);
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        await supabase
-          .from("likes")
-          .delete()
-          .match({ tweet_id: tweet.id, user_id: user.id })
-          .single();
-
-        router.refresh();
-        setLike((prev) => !prev);
-      }
     }
   };
+
   return (
     <div>
-      {!tweet.user_has_liked_tweet ? (
-        <button onClick={handleSubmit} disabled={disable}>
-          <IoIosHeartEmpty />
-        </button>
+      {tweet.user_has_liked_tweet ? (
+        <IoMdHeart onClick={handleSubmit} />
       ) : (
-        <button onClick={handleSubmit} disabled={disable}>
-          <IoMdHeart />
-        </button>
+        <IoIosHeartEmpty onClick={handleSubmit} />
       )}
     </div>
   );
