@@ -1,5 +1,5 @@
 "use client";
-import { LikeWithAuthor } from "@/app/types/type";
+import { LikeWithAuthor } from "@/types/type";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

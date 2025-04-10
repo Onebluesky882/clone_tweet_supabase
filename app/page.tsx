@@ -1,5 +1,6 @@
 import Likes from "@/components/Likes";
 import Logout from "@/components/Logout";
+import Post from "@/components/Post";
 import Tweet from "@/components/Tweet";
 import { createServer } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
@@ -34,6 +35,7 @@ export default async function Home() {
     <div>
       <h1>homepage</h1>
       <Logout />
+      <Post />
       <div>
         {tweets?.map((tweet) => (
           <Tweet tweet={tweet} key={tweet.id} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { LikeWithAuthor } from "@/app/types/type";
+import { LikeWithAuthor } from "@/types/type";
 import Likes from "./Likes";
 
 const Tweet = ({ tweet }: { tweet: LikeWithAuthor }) => {
